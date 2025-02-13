@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: flavorset-{{ .Values.gloval.env }}
+  namespace: {{ .Values.global.argocdConfig.hub_ns }}
+spec:
+  goTemplate: true
+  generators:
+  - git:
+      repoURL: {{ .Values.global.definitionsRepo.url }}
+      revision: {{ .Values.global.definitionsRepo.revision }}
+      directories:
+      - path: '{{ .Values.global.machineRepo }}/*' # todo removed multiple argos
+  template:
+    metadata:
+      name: '{{ include "git-generator.flavorName" . }}-{{ .Values.global.env }}-clusterset' # todo chanegd *** to clusterset
+      namespace: {{ .Values.global.argocdConfig.hub_ns }}
+    spec:
+      {{ if .Values.global.autoSync }}
+      syncPolicy:
+        automated: {}
+      {{ end }}
+      destination:
+        server: 'https://kubernetes.default.svc'
+        namespace: {{ .Values.global.argocdConfig.hub_ns }}
+      project: {{ .Values.global.argocdConfig.hub_project }}
+      source:
+        repoURL: {{ .Values.global.machineRepo.url }}
+        targetRevision: {{ .Values.global.machineRepo.revision }}
+        helm:
+          values: |-
+            global:
+              {{- toYaml .Values.global | nindent 14 }}
+              flavor: {{ include "git-generator.flavorName" . | quote }}
+        path: clusterset
