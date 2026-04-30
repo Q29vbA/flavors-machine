@@ -1,0 +1,25 @@
+{{- range .Values.edgeApps }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ $.Values.global.cluster }}-{{ .name }}
+  namespace: {{ $.Values.global.argocdConfig.hub_ns }}
+  annotations:
+    # render after edge Argo CD core app in the same parent sync
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: {{ $.Values.global.argocdConfig.edge_project }}
+  {{- if ne $.Values.global.env "dev" }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  {{- end }}
+  destination:
+    # target cluster is edge; namespace here is where the app payload goes
+    server: {{ $.Values.clusterServer }}
+    namespace: {{ .namespace }}
+  source:
+    {{- omit . "name" "namespace" | toYaml | nindent 4 }}
+{{- end }}

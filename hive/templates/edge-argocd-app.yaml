@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ .Values.global.cluster }}-edge-argocd
+  namespace: {{ .Values.global.argocdConfig.hub_ns }}
+  annotations:
+    # sync first so edge Argo CD CRDs/controllers exist before edge app objects are created
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: {{ .Values.global.argocdConfig.edge_project }}
+  {{- if ne .Values.global.env "dev" }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  {{- end }}
+  destination:
+    # this is the edge cluster API endpoint registered in hub Argo CD
+    server: {{ .Values.clusterServer }}
+    namespace: argocd
+  source:
+    repoURL: https://github.com/argoproj/argo-cd
+    targetRevision: stable
+    path: manifests/core-install

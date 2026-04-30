@@ -1,19 +1,18 @@
+# ROOT values - set once at bootstrap by the operator.
+# These are the source of truth propagated down the entire Application chain.
+# Nothing above this chart overrides these values.
 global:
-  # todo var name
   machineRepo:
     url: https://github.com/Q29vbA/flavors-machine.git
     revision: HEAD
   definitionsRepo:
     url: https://github.com/Q29vbA/flavors-definition.git
     revision: HEAD
-  # todo implement?
-  #inventoryRepo:
-  env: virtual
-  autoSync: false
-
+  # env: target environment - drives path globs in all child appsets (e.g. dev, prod)
+  env: dev
   argocdConfig:
-    hub_ns: define
+    hub_ns: argocd
     hub_project: default
     edge_project: default
-  baseDomain: placeholder.example.com
+  baseDomain: hub.example.com
 

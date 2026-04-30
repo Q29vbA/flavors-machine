@@ -1,0 +1,35 @@
+# Values used for local linting/dev only.
+# Two rendering modes - same chart, different callers:
+#
+#  MODE A (appset.yaml renders):  called by the flavorset appset as the clusterset Application.
+#    global.*  overridden by flavorset appset inline helm.values.
+#    hubApps is empty → appset.yaml fires, hubapps.yaml renders nothing.
+#
+#  MODE B (hubapps.yaml renders): called by the clusterset appset as a per-cluster hubapps Application.
+#    global.*  overridden by clusterset appset inline helm.values.
+#    global.cluster overridden by clusterset appset (set to clusterfile basename).
+#    hubApps   overridden by valueFile $hubApps/<flavor>/hubApps.yaml.
+#    clusterServer overridden by valueFile $clusterFile/<flavor>/<env>/<cluster>.yaml.
+global:
+  machineRepo:
+    url: https://github.com/Q29vbA/flavors-machine
+    revision: HEAD
+  definitionsRepo:
+    url: https://github.com/Q29vbA/flavors-definition
+    revision: HEAD
+  env: dev                 # overridden by parent appset
+  flavor: gpu-enabled      # overridden by flavorset appset ({{ .path.basename }} of flavor dir)
+  cluster: gpu-cluster-dev # overridden by clusterset appset (clusterfile basename, MODE B only)
+  argocdConfig:
+    hub_ns: argocd
+    hub_project: default
+    edge_project: default
+  baseDomain: hub.example.com
+
+# hubApps - empty here; overridden by valueFile $hubApps/<flavor>/hubApps.yaml in MODE B.
+# Drives hubapps.yaml template. When empty, only the appset in appset.yaml renders.
+hubApps: []
+
+# clusterServer - overridden by valueFile $clusterFile/<flavor>/<env>/<cluster>.yaml in MODE B.
+# Used in hubapps.yaml only (passed inline to hive's multi-source Application).
+clusterServer: https://gpu-cluster-dev.example.com

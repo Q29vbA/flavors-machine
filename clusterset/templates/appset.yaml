@@ -1,0 +1,59 @@
+{{- /*
+  Rendered only when this chart is deployed as the clusterset Application by the flavorset appset
+  (i.e. hubApps is not yet populated). Deploys one hubapps Application per cluster, using this
+  same chart as the source so that hubapps.yaml below gets rendered with the real hubApps values.
+*/}}
+{{- if not .Values.hubApps }}
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: clusterset-{{ .Values.global.flavor }}-{{ .Values.global.env }}
+  namespace: {{ .Values.global.argocdConfig.hub_ns }}
+spec:
+  goTemplate: true
+  generators:
+    - git:
+        repoURL: {{ .Values.global.definitionsRepo.url }}
+        revision: {{ .Values.global.definitionsRepo.revision }}
+        files:
+          # discover all cluster registration files for this flavor/env
+          - path: '{{ .Values.global.flavor }}/{{ .Values.global.env }}/*.yaml'
+  template:
+    metadata:
+      name: '{{`{{ .path.filename | trimSuffix ".yaml" }}`}}-{{ .Values.global.flavor }}-{{ .Values.global.env }}-hubapps'
+      namespace: {{ .Values.global.argocdConfig.hub_ns }}
+    spec:
+      project: {{ .Values.global.argocdConfig.hub_project }}
+      {{- if ne .Values.global.env "dev" }}
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+      {{- end }}
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: {{ .Values.global.argocdConfig.hub_ns }}
+      sources:
+        # Source 1: this chart itself - rendered with hubApps values it loops hubapps.yaml
+        - repoURL: {{ .Values.global.machineRepo.url }}
+          targetRevision: {{ .Values.global.machineRepo.revision }}
+          path: clusterset
+          helm:
+            valueFiles:
+              # hub-side app list (ca-bundle + hive)
+              - $hubApps/{{ .Values.global.flavor }}/hubApps.yaml
+              # per-cluster overrides such as clusterServer
+              - $clusterFile/{{ .Values.global.flavor }}/{{ .Values.global.env }}/{{`{{ .path.filename }}`}}
+            values: |
+              global:
+                {{- include "clusterset.globalYaml" $ | nindent 16 }}
+                cluster: '{{`{{ .path.filename | trimSuffix ".yaml" }}`}}'
+        # Source 2: provides hubApps list → .Values.hubApps in the clusterset chart
+        - repoURL: {{ .Values.global.definitionsRepo.url }}
+          targetRevision: {{ .Values.global.definitionsRepo.revision }}
+          ref: hubApps
+        # Source 3: provides per-cluster overrides (clusterServer etc.) → .Values.clusterServer
+        - repoURL: {{ .Values.global.definitionsRepo.url }}
+          targetRevision: {{ .Values.global.definitionsRepo.revision }}
+          ref: clusterFile
+{{- end }}

@@ -1,0 +1,55 @@
+{{- /*
+  Rendered only when this chart is deployed as a per-cluster hubapps Application by the
+  clusterset appset (i.e. hubApps is non-empty, loaded from hubApps.yaml valueFile).
+  Creates one ArgoCD Application on the hub per entry in .Values.hubApps.
+
+  Two kinds of entry are supported:
+    - chart entry (e.g. ca-bundle): single-source Helm chart Application.
+    - path entry  (e.g. hive):      multi-source Application - the Helm chart at .path
+                                    plus edgeApps.yaml and the clusterfile as extra valueFiles.
+*/}}
+{{- range .Values.hubApps }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ $.Values.global.cluster }}-{{ .name }}
+  namespace: {{ $.Values.global.argocdConfig.hub_ns }}
+spec:
+  project: {{ $.Values.global.argocdConfig.hub_project }}
+  {{- if ne $.Values.global.env "dev" }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  {{- end }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ $.Values.global.argocdConfig.hub_ns }}
+  {{- if eq .name "hive" }}
+  {{- /* Hive uses multi-source so one app can stitch chart + flavor edge list + cluster overrides */}}
+  sources:
+    - repoURL: {{ .repoURL }}
+      targetRevision: {{ .targetRevision }}
+      path: {{ .path }}
+      helm:
+        valueFiles:
+          # edge workload list consumed by hive/templates/edge-apps-appset.yaml
+          - $edgeApps/{{ $.Values.global.flavor }}/edgeApps.yaml
+          # destination edge API server and optional per-cluster tweaks
+          - $clusterFile/{{ $.Values.global.flavor }}/{{ $.Values.global.env }}/{{ $.Values.global.cluster }}.yaml
+        values: |
+          global:
+            {{- $.Values.global | toYaml | nindent 12 }}
+    - repoURL: {{ $.Values.global.definitionsRepo.url }}
+      targetRevision: {{ $.Values.global.definitionsRepo.revision }}
+      ref: edgeApps
+    - repoURL: {{ $.Values.global.definitionsRepo.url }}
+      targetRevision: {{ $.Values.global.definitionsRepo.revision }}
+      ref: clusterFile
+  {{- else }}
+  {{- /* Non-hive hub apps are regular single-source Applications */}}
+  source:
+    {{- omit . "name" "namespace" | toYaml | nindent 4 }}
+  {{- end }}
+{{- end }}

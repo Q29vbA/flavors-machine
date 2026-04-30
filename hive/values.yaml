@@ -1,0 +1,30 @@
+# Values used for local linting/dev only.
+# At runtime ALL fields are set by the hive Application generated in
+# clusterset/templates/hubapps.yaml (the hive path-entry case) via three sources:
+#   1. inline helm.values block      → global.*
+#   2. valueFile $edgeApps/<flavor>/edgeApps.yaml  → edgeApps
+#   3. valueFile $clusterFile/<flavor>/<env>/<cluster>.yaml → clusterServer
+
+# global.* - overridden by clusterset hubapps.yaml inline helm.values
+global:
+  env: dev
+  flavor: gpu-enabled
+  cluster: gpu-cluster-dev
+  argocdConfig:
+    hub_ns: argocd
+    edge_project: default
+  baseDomain: hub.example.com
+  machineRepo:
+    url: https://github.com/Q29vbA/flavors-machine
+    revision: HEAD
+  definitionsRepo:
+    url: https://github.com/Q29vbA/flavors-definition
+    revision: HEAD
+
+# edgeApps - overridden by valueFile $edgeApps/<flavor>/edgeApps.yaml (definitions repo)
+# Each entry → one hub-ArgoCD-managed Application deploying to the edge cluster.
+edgeApps: []
+
+# clusterServer - overridden by valueFile $clusterFile/<flavor>/<env>/<cluster>.yaml (definitions repo)
+# This is the edge cluster API server URL used as destination for all hub-managed edge Applications.
+clusterServer: https://gpu-cluster-dev.example.com

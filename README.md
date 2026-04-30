@@ -1,13 +1,21 @@
 # flavors-machine
-## 🚧 Repository Under Construction 🚧
 
-Hey there! 👋 This repo is currently under construction as we work on making our solution public.
+This is a demo repo, lightweight copy of our internal-network project.
+Refer to our [medium post explaining the original project](https://medium.com/@yoavshamia/managing-diverse-large-scale-k8s-clusters-with-a-flavor-based-approach-150934dfb1f3 )
 
-Our flavor-based deployment model is fully built and running in production, but right now, it lives in a private git environment. We’re in the process of adapting and documenting everything for public access - stay tuned!
+this repo is the "how" side of the setup.
+it has Helm charts that render Argo CD Applications and ApplicationSets in layers.
 
-We need some time to:
-- Clean up internal configurations
-- Remove environment-specific details
-- Write proper documentation
+start at `flavorset/`, then it fans out to `clusterset/`, then to per-cluster `hubApps`, and from there to `hive`.
 
-Thanks for your patience! In the meantime, feel free to check out our blog post for an overview of the architecture.
+## what is in here
+
+`flavorset/` creates one ApplicationSet per env and discovers flavors from the definitions repo.
+
+`clusterset/` creates one Application per cluster for that flavor, then loops `hubApps.yaml` to render hub-side Applications.
+
+`hive/` is one hub-side app in that list. it deploys Argo CD Core on the edge cluster first, then deploys edge app Applications.
+
+## bootstrap once
+
+Check flavorset/README.md for bootstrapping

@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: flavorset-{{ .Values.global.env }}
+  namespace: {{ .Values.global.argocdConfig.hub_ns }}
+spec:
+  goTemplate: true
+  generators:
+    - git:
+        repoURL: {{ .Values.global.definitionsRepo.url }}
+        revision: {{ .Values.global.definitionsRepo.revision }}
+        directories:
+          # one clusterset per flavor directory under the selected env
+          - path: '*'
+  template:
+    metadata:
+      name: '{{`{{ .path.basename }}`}}-{{ .Values.global.env }}-clusterset'
+      namespace: {{ .Values.global.argocdConfig.hub_ns }}
+    spec:
+      project: {{ .Values.global.argocdConfig.hub_project }}
+      {{- if ne .Values.global.env "dev" }}
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+      {{- end }}
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: {{ .Values.global.argocdConfig.hub_ns }}
+      source:
+        repoURL: {{ .Values.global.machineRepo.url }}
+        targetRevision: {{ .Values.global.machineRepo.revision }}
+        path: clusterset
+        helm:
+          # pass global defaults down, flavor is injected from git directory name
+          values: |
+            global:
+              {{- include "flavorset.globalYaml" $ | nindent 14 }}
+              flavor: '{{`{{ .path.basename }}`}}'
