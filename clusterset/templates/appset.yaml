@@ -1,0 +1,55 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: clusterset-{{ .Values.global.flavor }}-{{ .Values.global.env }}
+  namespace: {{ .Values.global.argocdConfig.hub_ns }}
+spec:
+  goTemplate: true
+  generators:
+    - git:
+        repoURL: {{ .Values.global.definitionsRepo.url }}
+        revision: {{ .Values.global.definitionsRepo.revision }}
+        files:
+          - path: '{{ .Values.global.env }}/{{ .Values.global.flavor }}/*.yaml'
+  template:
+    metadata:
+      name: '{{`{{ .path.basenameNormalized }}`}}-{{ .Values.global.flavor }}-{{ .Values.global.env }}-hubapps'
+      namespace: {{ .Values.global.argocdConfig.hub_ns }}
+    spec:
+      project: {{ .Values.global.argocdConfig.hub_project }}
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: {{ .Values.global.argocdConfig.hub_ns }}
+      sources:
+        - repoURL: {{ .Values.global.machineRepo.url }}
+          targetRevision: {{ .Values.global.machineRepo.revision }}
+          path: hive
+          helm:
+            valueFiles:
+              - $hubApps/{{ .Values.global.env }}/{{ .Values.global.flavor }}/hubApps.yaml
+              - $clusterFile/{{ .Values.global.env }}/{{ .Values.global.flavor }}/{{`{{ .path.basename }}`}}
+            values: |
+              global:
+                env: {{ .Values.global.env }}
+                flavor: {{ .Values.global.flavor }}
+                cluster: '{{`{{ .path.basenameNormalized }}`}}'
+                argocdConfig:
+                  hub_ns: {{ .Values.global.argocdConfig.hub_ns }}
+                  edge_project: {{ .Values.global.argocdConfig.edge_project }}
+                baseDomain: {{ .Values.global.baseDomain }}
+                machineRepo:
+                  url: {{ .Values.global.machineRepo.url }}
+                  revision: {{ .Values.global.machineRepo.revision }}
+                definitionsRepo:
+                  url: {{ .Values.global.definitionsRepo.url }}
+                  revision: {{ .Values.global.definitionsRepo.revision }}
+        - repoURL: {{ .Values.global.definitionsRepo.url }}
+          targetRevision: {{ .Values.global.definitionsRepo.revision }}
+          ref: hubApps
+        - repoURL: {{ .Values.global.definitionsRepo.url }}
+          targetRevision: {{ .Values.global.definitionsRepo.revision }}
+          ref: clusterFile

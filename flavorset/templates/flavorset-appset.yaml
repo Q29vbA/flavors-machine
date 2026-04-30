@@ -1,0 +1,46 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: flavorset-{{ .Values.global.env }}
+  namespace: {{ .Values.global.argocdConfig.hub_ns }}
+spec:
+  goTemplate: true
+  generators:
+    - git:
+        repoURL: {{ .Values.global.definitionsRepo.url }}
+        revision: {{ .Values.global.definitionsRepo.revision }}
+        directories:
+          - path: '{{ .Values.global.env }}/*'
+  template:
+    metadata:
+      name: '{{`{{ .path.basename }}`}}-{{ .Values.global.env }}-clusterset'
+      namespace: {{ .Values.global.argocdConfig.hub_ns }}
+    spec:
+      project: {{ .Values.global.argocdConfig.hub_project }}
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: {{ .Values.global.argocdConfig.hub_ns }}
+      source:
+        repoURL: {{ .Values.global.machineRepo.url }}
+        targetRevision: {{ .Values.global.machineRepo.revision }}
+        path: clusterset
+        helm:
+          values: |
+            global:
+              machineRepo:
+                url: {{ .Values.global.machineRepo.url }}
+                revision: {{ .Values.global.machineRepo.revision }}
+              definitionsRepo:
+                url: {{ .Values.global.definitionsRepo.url }}
+                revision: {{ .Values.global.definitionsRepo.revision }}
+              env: {{ .Values.global.env }}
+              argocdConfig:
+                hub_ns: {{ .Values.global.argocdConfig.hub_ns }}
+                hub_project: {{ .Values.global.argocdConfig.hub_project }}
+                edge_project: {{ .Values.global.argocdConfig.edge_project }}
+              baseDomain: {{ .Values.global.baseDomain }}
+              flavor: '{{`{{ .path.basename }}`}}'

@@ -1,19 +1,14 @@
 global:
-  # todo var name
   machineRepo:
     url: https://github.com/Q29vbA/flavors-machine.git
-    revision: HEAD
+    revision: feat/flavor-bootstrap
   definitionsRepo:
     url: https://github.com/Q29vbA/flavors-definition.git
-    revision: HEAD
-  # todo implement?
-  #inventoryRepo:
-  env: virtual
-  autoSync: false
-
+    revision: feat/flavor-bootstrap
+  env: dev
   argocdConfig:
-    hub_ns: define
+    hub_ns: argocd
     hub_project: default
     edge_project: default
-  baseDomain: placeholder.example.com
+  baseDomain: hub.example.com
 

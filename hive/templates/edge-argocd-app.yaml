@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ .Values.global.cluster }}-edge-argocd
+  namespace: {{ .Values.global.argocdConfig.hub_ns }}
+spec:
+  project: {{ .Values.global.argocdConfig.edge_project }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  destination:
+    server: {{ .Values.clusterServer }}
+    namespace: argocd
+  source:
+    repoURL: https://github.com/argoproj/argo-cd
+    targetRevision: stable
+    path: manifests/core-install

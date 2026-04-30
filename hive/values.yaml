@@ -1,0 +1,35 @@
+global:
+  env: dev
+  flavor: gpu-enabled
+  cluster: gpu-cluster-dev
+  argocdConfig:
+    hub_ns: argocd
+    edge_project: default
+  baseDomain: hub.example.com
+  machineRepo:
+    url: https://github.com/my-org/flavors-machine
+    revision: feat/flavor-bootstrap
+  definitionsRepo:
+    url: https://github.com/my-org/flavors-definition
+    revision: feat/flavor-bootstrap
+
+# Populated via hubApps.yaml valueFile from the definitions repo.
+hubApps: []
+# Example entry:
+# - name: ca-bundle
+#   repoURL: https://stefanprodan.github.io/podinfo
+#   chart: podinfo
+#   targetRevision: "6.7.0"
+#   namespace: ca-bundle
+
+# Populated via edgeApps.yaml valueFile from the definitions repo.
+edgeApps: []
+# Example entry:
+# - name: edge-podinfo-primary
+#   repoURL: https://stefanprodan.github.io/podinfo
+#   chart: podinfo
+#   targetRevision: "6.7.0"
+#   namespace: podinfo-primary
+
+# Destination cluster server URL for the edge cluster.
+clusterServer: https://gpu-cluster-dev.example.com

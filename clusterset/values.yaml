@@ -1,0 +1,14 @@
+global:
+  machineRepo:
+    url: https://github.com/my-org/flavors-machine
+    revision: feat/flavor-bootstrap
+  definitionsRepo:
+    url: https://github.com/my-org/flavors-definition
+    revision: feat/flavor-bootstrap
+  env: dev
+  flavor: gpu-enabled
+  argocdConfig:
+    hub_ns: argocd
+    hub_project: default
+    edge_project: default
+  baseDomain: hub.example.com
