@@ -26,8 +26,8 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: {{ $.Values.global.argocdConfig.hub_ns }}
-  {{- if .path }}
-  {{- /* Hive: multi-source — chart + edgeApps.yaml + clusterfile as Helm valueFiles */}}
+  {{- if eq .name "hive" }}
+  {{- /* Hive: multi-source — Helm chart + edgeApps.yaml + clusterfile as valueFiles */}}
   sources:
     - repoURL: {{ .repoURL }}
       targetRevision: {{ .targetRevision }}
@@ -38,19 +38,7 @@ spec:
           - $clusterFile/{{ $.Values.global.flavor }}/{{ $.Values.global.env }}/{{ $.Values.global.cluster }}.yaml
         values: |
           global:
-            env: {{ $.Values.global.env }}
-            flavor: {{ $.Values.global.flavor }}
-            cluster: {{ $.Values.global.cluster }}
-            argocdConfig:
-              hub_ns: {{ $.Values.global.argocdConfig.hub_ns }}
-              edge_project: {{ $.Values.global.argocdConfig.edge_project }}
-            baseDomain: {{ $.Values.global.baseDomain }}
-            machineRepo:
-              url: {{ $.Values.global.machineRepo.url }}
-              revision: {{ $.Values.global.machineRepo.revision }}
-            definitionsRepo:
-              url: {{ $.Values.global.definitionsRepo.url }}
-              revision: {{ $.Values.global.definitionsRepo.revision }}
+            {{- $.Values.global | toYaml | nindent 12 }}
     - repoURL: {{ $.Values.global.definitionsRepo.url }}
       targetRevision: {{ $.Values.global.definitionsRepo.revision }}
       ref: edgeApps
@@ -58,10 +46,8 @@ spec:
       targetRevision: {{ $.Values.global.definitionsRepo.revision }}
       ref: clusterFile
   {{- else }}
-  {{- /* Regular Helm chart hub app (e.g. ca-bundle) */}}
+  {{- /* Regular Helm chart hub app — source fields taken verbatim from the hubApps list entry */}}
   source:
-    repoURL: {{ .repoURL }}
-    chart: {{ .chart }}
-    targetRevision: {{ .targetRevision }}
+    {{- omit . "name" "namespace" | toYaml | nindent 4 }}
   {{- end }}
 {{- end }}

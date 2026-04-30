@@ -33,16 +33,5 @@ spec:
         helm:
           values: |
             global:
-              machineRepo:
-                url: {{ .Values.global.machineRepo.url }}
-                revision: {{ .Values.global.machineRepo.revision }}
-              definitionsRepo:
-                url: {{ .Values.global.definitionsRepo.url }}
-                revision: {{ .Values.global.definitionsRepo.revision }}
-              env: {{ .Values.global.env }}
-              argocdConfig:
-                hub_ns: {{ .Values.global.argocdConfig.hub_ns }}
-                hub_project: {{ .Values.global.argocdConfig.hub_project }}
-                edge_project: {{ .Values.global.argocdConfig.edge_project }}
-              baseDomain: {{ .Values.global.baseDomain }}
+              {{- include "flavorset.globalYaml" $ | nindent 14 }}
               flavor: '{{`{{ .path.basename }}`}}'

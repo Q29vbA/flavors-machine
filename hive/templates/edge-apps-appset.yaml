@@ -17,7 +17,5 @@ spec:
     server: {{ $.Values.clusterServer }}
     namespace: {{ .namespace }}
   source:
-    repoURL: {{ .repoURL }}
-    chart: {{ .chart }}
-    targetRevision: {{ .targetRevision }}
+    {{- omit . "name" "namespace" | toYaml | nindent 4 }}
 {{- end }}
