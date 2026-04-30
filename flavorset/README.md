@@ -24,6 +24,12 @@ flavorset/
 
 ## bootstrap
 
+use portfoward to argo UI to see everything in action:
+```bash
+kubectl port-forwar
+d svc/argocd-server -n argocd 8080:443
+```
+
 apply once to seed Argo CD:
 
 ```bash
