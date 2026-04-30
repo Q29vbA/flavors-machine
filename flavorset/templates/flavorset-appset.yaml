@@ -10,17 +10,19 @@ spec:
         repoURL: {{ .Values.global.definitionsRepo.url }}
         revision: {{ .Values.global.definitionsRepo.revision }}
         directories:
-          - path: '{{ .Values.global.env }}/*'
+          - path: '*'
   template:
     metadata:
       name: '{{`{{ .path.basename }}`}}-{{ .Values.global.env }}-clusterset'
       namespace: {{ .Values.global.argocdConfig.hub_ns }}
     spec:
       project: {{ .Values.global.argocdConfig.hub_project }}
+      {{- if ne .Values.global.env "dev" }}
       syncPolicy:
         automated:
           prune: true
           selfHeal: true
+      {{- end }}
       destination:
         server: https://kubernetes.default.svc
         namespace: {{ .Values.global.argocdConfig.hub_ns }}

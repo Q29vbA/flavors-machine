@@ -7,10 +7,12 @@ metadata:
   namespace: {{ $.Values.global.argocdConfig.hub_ns }}
 spec:
   project: {{ $.Values.global.argocdConfig.edge_project }}
+  {{- if ne $.Values.global.env "dev" }}
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+  {{- end }}
   destination:
     server: {{ $.Values.clusterServer }}
     namespace: {{ .namespace }}
