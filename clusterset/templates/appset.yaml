@@ -1,3 +1,9 @@
+{{- /*
+  Rendered only when this chart is deployed as the clusterset Application by the flavorset appset
+  (i.e. hubApps is not yet populated). Deploys one hubapps Application per cluster, using this
+  same chart as the source so that hubapps.yaml below gets rendered with the real hubApps values.
+*/}}
+{{- if not .Values.hubApps }}
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
@@ -13,7 +19,7 @@ spec:
           - path: '{{ .Values.global.flavor }}/{{ .Values.global.env }}/*.yaml'
   template:
     metadata:
-      name: '{{`{{ .path.filename }}`}}-{{ .Values.global.flavor }}-{{ .Values.global.env }}-hubapps'
+      name: '{{`{{ .path.filename | trimSuffix ".yaml" }}`}}-{{ .Values.global.flavor }}-{{ .Values.global.env }}-hubapps'
       namespace: {{ .Values.global.argocdConfig.hub_ns }}
     spec:
       project: {{ .Values.global.argocdConfig.hub_project }}
@@ -27,9 +33,10 @@ spec:
         server: https://kubernetes.default.svc
         namespace: {{ .Values.global.argocdConfig.hub_ns }}
       sources:
+        # Source 1: this chart itself — rendered with hubApps values it loops hubapps.yaml
         - repoURL: {{ .Values.global.machineRepo.url }}
           targetRevision: {{ .Values.global.machineRepo.revision }}
-          path: hive
+          path: clusterset
           helm:
             valueFiles:
               - $hubApps/{{ .Values.global.flavor }}/hubApps.yaml
@@ -38,9 +45,10 @@ spec:
               global:
                 env: {{ .Values.global.env }}
                 flavor: {{ .Values.global.flavor }}
-                cluster: '{{`{{ .path.filename }}`}}'
+                cluster: '{{`{{ .path.filename | trimSuffix ".yaml" }}`}}'
                 argocdConfig:
                   hub_ns: {{ .Values.global.argocdConfig.hub_ns }}
+                  hub_project: {{ .Values.global.argocdConfig.hub_project }}
                   edge_project: {{ .Values.global.argocdConfig.edge_project }}
                 baseDomain: {{ .Values.global.baseDomain }}
                 machineRepo:
@@ -49,9 +57,12 @@ spec:
                 definitionsRepo:
                   url: {{ .Values.global.definitionsRepo.url }}
                   revision: {{ .Values.global.definitionsRepo.revision }}
+        # Source 2: provides hubApps list → .Values.hubApps in the clusterset chart
         - repoURL: {{ .Values.global.definitionsRepo.url }}
           targetRevision: {{ .Values.global.definitionsRepo.revision }}
           ref: hubApps
+        # Source 3: provides per-cluster overrides (clusterServer etc.) → .Values.clusterServer
         - repoURL: {{ .Values.global.definitionsRepo.url }}
           targetRevision: {{ .Values.global.definitionsRepo.revision }}
           ref: clusterFile
+{{- end }}

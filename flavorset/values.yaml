@@ -1,3 +1,6 @@
+# ROOT values — set once at bootstrap by the operator.
+# These are the source of truth propagated down the entire Application chain.
+# Nothing above this chart overrides these values.
 global:
   machineRepo:
     url: https://github.com/Q29vbA/flavors-machine.git
@@ -5,6 +8,7 @@ global:
   definitionsRepo:
     url: https://github.com/Q29vbA/flavors-definition.git
     revision: feat/flavor-bootstrap
+  # env: target environment — drives path globs in all child appsets (e.g. dev, prod)
   env: dev
   argocdConfig:
     hub_ns: argocd

@@ -1,0 +1,67 @@
+{{- /*
+  Rendered only when this chart is deployed as a per-cluster hubapps Application by the
+  clusterset appset (i.e. hubApps is non-empty, loaded from hubApps.yaml valueFile).
+  Creates one ArgoCD Application on the hub per entry in .Values.hubApps.
+
+  Two kinds of entry are supported:
+    - chart entry (e.g. ca-bundle): single-source Helm chart Application.
+    - path entry  (e.g. hive):      multi-source Application — the Helm chart at .path
+                                    plus edgeApps.yaml and the clusterfile as extra valueFiles.
+*/}}
+{{- range .Values.hubApps }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ $.Values.global.cluster }}-{{ .name }}
+  namespace: {{ $.Values.global.argocdConfig.hub_ns }}
+spec:
+  project: {{ $.Values.global.argocdConfig.hub_project }}
+  {{- if ne $.Values.global.env "dev" }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  {{- end }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ $.Values.global.argocdConfig.hub_ns }}
+  {{- if .path }}
+  {{- /* Hive: multi-source — chart + edgeApps.yaml + clusterfile as Helm valueFiles */}}
+  sources:
+    - repoURL: {{ .repoURL }}
+      targetRevision: {{ .targetRevision }}
+      path: {{ .path }}
+      helm:
+        valueFiles:
+          - $edgeApps/{{ $.Values.global.flavor }}/edgeApps.yaml
+          - $clusterFile/{{ $.Values.global.flavor }}/{{ $.Values.global.env }}/{{ $.Values.global.cluster }}.yaml
+        values: |
+          global:
+            env: {{ $.Values.global.env }}
+            flavor: {{ $.Values.global.flavor }}
+            cluster: {{ $.Values.global.cluster }}
+            argocdConfig:
+              hub_ns: {{ $.Values.global.argocdConfig.hub_ns }}
+              edge_project: {{ $.Values.global.argocdConfig.edge_project }}
+            baseDomain: {{ $.Values.global.baseDomain }}
+            machineRepo:
+              url: {{ $.Values.global.machineRepo.url }}
+              revision: {{ $.Values.global.machineRepo.revision }}
+            definitionsRepo:
+              url: {{ $.Values.global.definitionsRepo.url }}
+              revision: {{ $.Values.global.definitionsRepo.revision }}
+    - repoURL: {{ $.Values.global.definitionsRepo.url }}
+      targetRevision: {{ $.Values.global.definitionsRepo.revision }}
+      ref: edgeApps
+    - repoURL: {{ $.Values.global.definitionsRepo.url }}
+      targetRevision: {{ $.Values.global.definitionsRepo.revision }}
+      ref: clusterFile
+  {{- else }}
+  {{- /* Regular Helm chart hub app (e.g. ca-bundle) */}}
+  source:
+    repoURL: {{ .repoURL }}
+    chart: {{ .chart }}
+    targetRevision: {{ .targetRevision }}
+  {{- end }}
+{{- end }}
