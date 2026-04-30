@@ -5,6 +5,9 @@ kind: Application
 metadata:
   name: {{ $.Values.global.cluster }}-{{ .name }}
   namespace: {{ $.Values.global.argocdConfig.hub_ns }}
+  annotations:
+    # render after edge Argo CD core app in the same parent sync
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   project: {{ $.Values.global.argocdConfig.edge_project }}
   {{- if ne $.Values.global.env "dev" }}
@@ -14,6 +17,7 @@ spec:
       selfHeal: true
   {{- end }}
   destination:
+    # target cluster is edge; namespace here is where the app payload goes
     server: {{ $.Values.clusterServer }}
     namespace: {{ .namespace }}
   source:

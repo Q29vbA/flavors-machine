@@ -5,7 +5,7 @@
 #   2. valueFile $edgeApps/<flavor>/edgeApps.yaml  → edgeApps
 #   3. valueFile $clusterFile/<flavor>/<env>/<cluster>.yaml → clusterServer
 
-# global.* — overridden by clusterset hubapps.yaml inline helm.values
+# global.* - overridden by clusterset hubapps.yaml inline helm.values
 global:
   env: dev
   flavor: gpu-enabled
@@ -16,21 +16,15 @@ global:
   baseDomain: hub.example.com
   machineRepo:
     url: https://github.com/Q29vbA/flavors-machine
-    revision: feat/flavor-bootstrap
+    revision: HEAD
   definitionsRepo:
     url: https://github.com/Q29vbA/flavors-definition
-    revision: feat/flavor-bootstrap
+    revision: HEAD
 
-# edgeApps — overridden by valueFile $edgeApps/<flavor>/edgeApps.yaml (definitions repo)
+# edgeApps - overridden by valueFile $edgeApps/<flavor>/edgeApps.yaml (definitions repo)
 # Each entry → one hub-ArgoCD-managed Application deploying to the edge cluster.
 edgeApps: []
-# Example entry:
-# - name: edge-podinfo-primary
-#   repoURL: https://stefanprodan.github.io/podinfo
-#   chart: podinfo
-#   targetRevision: "6.7.0"
-#   namespace: podinfo-primary
 
-# clusterServer — overridden by valueFile $clusterFile/<flavor>/<env>/<cluster>.yaml (definitions repo)
+# clusterServer - overridden by valueFile $clusterFile/<flavor>/<env>/<cluster>.yaml (definitions repo)
 # This is the edge cluster API server URL used as destination for all hub-managed edge Applications.
 clusterServer: https://gpu-cluster-dev.example.com

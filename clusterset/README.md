@@ -1,17 +1,27 @@
 # clusterset
 
-Helm chart that renders a single ArgoCD ApplicationSet (the "clusterset") for one flavor. It discovers all `<clustername>.yaml` files under `<env>/<flavor>/` in the definitions repo and deploys one multi-source `hive` Application per cluster.
+this chart runs in two modes.
 
-## Directory structure
+mode A is the clusterset appset. it discovers cluster files and creates one per-cluster HubApps Application.
+
+mode B is the hubapps renderer. same chart, but now with `hubApps.yaml` loaded, so it loops and renders hub-side Applications like `ca-bundle` and `hive`.
+
+## files
 
 ```
 clusterset/
 ├── Chart.yaml
 ├── values.yaml
 └── templates/
-    └── appset.yaml   # ApplicationSet: git files generator → hive Applications (multi-source)
+    ├── _helpers.tpl
+    ├── appset.yaml
+    └── hubapps.yaml
 ```
 
-## Values passed from flavorset
+## important behavior
 
-The flavorset ApplicationSet passes `global.flavor` and all other `global.*` fields as Helm values when deploying this chart. Default values here are for local development/linting only.
+`appset.yaml` uses a git files generator on `<flavor>/<env>/*.yaml`.
+
+`hubapps.yaml` treats `hive` specially as multi-source, because it needs `edgeApps.yaml` and cluster overrides as value files.
+
+defaults in `values.yaml` are for local linting. parent layers override them at runtime.

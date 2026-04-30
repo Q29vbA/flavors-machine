@@ -1,29 +1,33 @@
 # hive
 
-Helm chart deployed once per cluster (by the clusterset ApplicationSet). It installs Argo CD Core on the edge cluster and creates one ArgoCD Application per entry in `edgeApps`.
+this is layer 4, deployed as a hub app.
+it is one chart per cluster.
 
-## Directory structure
+it does 2 things in order:
+1. deploy Argo CD Core to the edge cluster
+2. create one edge Application per item in `edgeApps.yaml`
+
+## files
 
 ```
 hive/
 ├── Chart.yaml
 ├── values.yaml
 └── templates/
-    ├── edge-argocd-app.yaml    # Application: installs Argo CD Core on the edge cluster
-    └── edge-apps-appset.yaml   # Application(s): one per edgeApps entry, targeting the edge cluster
+    ├── edge-argocd-app.yaml
+    └── edge-apps-appset.yaml
 ```
 
-## Values sources
+## value flow
 
-Values are composed from three sources (merged by the clusterset ApplicationSet):
-1. `hive/values.yaml` — defaults
-2. `flavors-definition/<env>/<flavor>/hubApps.yaml` — hub-side app list (provides `hubApps` and `edgeApps`)
-3. `flavors-definition/<env>/<flavor>/<clustername>.yaml` — per-cluster overrides (e.g. `clusterServer`)
+runtime values come from three places merged by Argo CD:
 
-## Bootstrap
+`hive/values.yaml` for defaults.
 
-The hive chart is not applied directly. It is deployed via the clusterset ApplicationSet. To bootstrap the entire chain, apply the root flavorset Application:
+`<flavor>/edgeApps.yaml` for the edge app list.
 
-```bash
-helm template flavorset ./flavorset --values ./flavorset/values.yaml | kubectl apply -n argocd -f -
-```
+`<flavor>/<env>/<cluster>.yaml` for per-cluster values like `clusterServer`.
+
+## bootstrap
+
+hive is not bootstrapped directly

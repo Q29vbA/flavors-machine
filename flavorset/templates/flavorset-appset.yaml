@@ -10,6 +10,7 @@ spec:
         repoURL: {{ .Values.global.definitionsRepo.url }}
         revision: {{ .Values.global.definitionsRepo.revision }}
         directories:
+          # one clusterset per flavor directory under the selected env
           - path: '*'
   template:
     metadata:
@@ -31,6 +32,7 @@ spec:
         targetRevision: {{ .Values.global.machineRepo.revision }}
         path: clusterset
         helm:
+          # pass global defaults down, flavor is injected from git directory name
           values: |
             global:
               {{- include "flavorset.globalYaml" $ | nindent 14 }}

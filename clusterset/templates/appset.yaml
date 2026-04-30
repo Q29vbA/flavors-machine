@@ -16,6 +16,7 @@ spec:
         repoURL: {{ .Values.global.definitionsRepo.url }}
         revision: {{ .Values.global.definitionsRepo.revision }}
         files:
+          # discover all cluster registration files for this flavor/env
           - path: '{{ .Values.global.flavor }}/{{ .Values.global.env }}/*.yaml'
   template:
     metadata:
@@ -33,13 +34,15 @@ spec:
         server: https://kubernetes.default.svc
         namespace: {{ .Values.global.argocdConfig.hub_ns }}
       sources:
-        # Source 1: this chart itself — rendered with hubApps values it loops hubapps.yaml
+        # Source 1: this chart itself - rendered with hubApps values it loops hubapps.yaml
         - repoURL: {{ .Values.global.machineRepo.url }}
           targetRevision: {{ .Values.global.machineRepo.revision }}
           path: clusterset
           helm:
             valueFiles:
+              # hub-side app list (ca-bundle + hive)
               - $hubApps/{{ .Values.global.flavor }}/hubApps.yaml
+              # per-cluster overrides such as clusterServer
               - $clusterFile/{{ .Values.global.flavor }}/{{ .Values.global.env }}/{{`{{ .path.filename }}`}}
             values: |
               global:

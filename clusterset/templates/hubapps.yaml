@@ -5,7 +5,7 @@
 
   Two kinds of entry are supported:
     - chart entry (e.g. ca-bundle): single-source Helm chart Application.
-    - path entry  (e.g. hive):      multi-source Application — the Helm chart at .path
+    - path entry  (e.g. hive):      multi-source Application - the Helm chart at .path
                                     plus edgeApps.yaml and the clusterfile as extra valueFiles.
 */}}
 {{- range .Values.hubApps }}
@@ -27,14 +27,16 @@ spec:
     server: https://kubernetes.default.svc
     namespace: {{ $.Values.global.argocdConfig.hub_ns }}
   {{- if eq .name "hive" }}
-  {{- /* Hive: multi-source — Helm chart + edgeApps.yaml + clusterfile as valueFiles */}}
+  {{- /* Hive uses multi-source so one app can stitch chart + flavor edge list + cluster overrides */}}
   sources:
     - repoURL: {{ .repoURL }}
       targetRevision: {{ .targetRevision }}
       path: {{ .path }}
       helm:
         valueFiles:
+          # edge workload list consumed by hive/templates/edge-apps-appset.yaml
           - $edgeApps/{{ $.Values.global.flavor }}/edgeApps.yaml
+          # destination edge API server and optional per-cluster tweaks
           - $clusterFile/{{ $.Values.global.flavor }}/{{ $.Values.global.env }}/{{ $.Values.global.cluster }}.yaml
         values: |
           global:
@@ -46,7 +48,7 @@ spec:
       targetRevision: {{ $.Values.global.definitionsRepo.revision }}
       ref: clusterFile
   {{- else }}
-  {{- /* Regular Helm chart hub app — source fields taken verbatim from the hubApps list entry */}}
+  {{- /* Non-hive hub apps are regular single-source Applications */}}
   source:
     {{- omit . "name" "namespace" | toYaml | nindent 4 }}
   {{- end }}

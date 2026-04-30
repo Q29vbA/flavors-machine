@@ -2,3 +2,4 @@ apiVersion: v2
 name: hive
 description: Deploys Argo CD Core and edge Applications to a remote cluster via the hub ArgoCD.
 version: 0.1.0
+appVersion: "0.1.0"

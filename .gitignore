@@ -1,0 +1,15 @@
+# Secrets and local credentials
+*.secret.yaml
+*.secrets.yaml
+.env
+.env.*
+kubeconfig
+
+# Local Helm output
+*.tgz
+charts/
+
+# Editor/system noise
+.DS_Store
+*.swp
+*.swo
